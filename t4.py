@@ -1,5 +1,6 @@
 # main_script.py
 
+
 import RPi.GPIO as GPIO
 import time
 import tkinter as tk
@@ -13,7 +14,7 @@ class GpioTkinterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("GPIO Tkinter App")
-        self.root.geometry("700x500")
+        self.root.geometry("1600x950")
         
         self.start_time = None
         self.L_reaction_time = None
@@ -71,7 +72,7 @@ class GpioTkinterApp:
         self.next_button.pack(pady=10)
 
         # Create a font object for extra large text
-        extra_large_font = tkFont.Font(size=50)  # Font size set to 50
+        extra_large_font = tkFont.Font(family="Helvetica", size=150, weight="bold") 
 
         # Reaction time labels with extra large font and positioned at the edges
         self.L_reaction_label = tk.Label(root, text="--", font=extra_large_font)
@@ -102,7 +103,7 @@ class GpioTkinterApp:
             if button_name == 'L_Start' and self.next_button_state == 3 and not self.L_reaction_recorded:
                 self.button_press_times['L_Start'] = current_time
                 if self.start_time is not None:
-                    self.L_reaction_time = (time.time() - self.start_time) * 1000
+                    self.L_reaction_time = (time.time() - self.start_time)
                     print(f"L reaction time: {self.L_reaction_time} ms")
                     self.update_reaction_times()
                     self.L_reaction_recorded = True
@@ -110,7 +111,7 @@ class GpioTkinterApp:
             elif button_name == 'R_Start' and self.next_button_state == 3 and not self.R_reaction_recorded:
                 self.button_press_times['R_Start'] = current_time
                 if self.start_time is not None:
-                    self.R_reaction_time = (time.time() - self.start_time) * 1000
+                    self.R_reaction_time = (time.time() - self.start_time)
                     print(f"R reaction time: {self.R_reaction_time} ms")
                     self.update_reaction_times()
                     self.R_reaction_recorded = True
@@ -122,9 +123,9 @@ class GpioTkinterApp:
     def update_reaction_times(self):
         # Assuming you have labels for displaying reaction times
         if self.L_reaction_time is not None:
-            self.L_reaction_label.config(text=f"{self.L_reaction_time:.2f}")
+            self.L_reaction_label.config(text=f"{self.L_reaction_time:.3f}")
         if self.R_reaction_time is not None:
-            self.R_reaction_label.config(text=f"{self.R_reaction_time:.2f}")  
+            self.R_reaction_label.config(text=f"{self.R_reaction_time:.3f}")  
 
     def get_corresponding_led(self, button_name):
         # Determine the corresponding LED based on the pressed button
@@ -160,9 +161,13 @@ class GpioTkinterApp:
             self.R_reaction_label.config(text=f"--")  
 
         elif self.next_button_state == 3:
-            self.start_time = time.time()
+            
+            self.start_time = None
             self.L_reaction_recorded = False
             self.R_reaction_recorded = False
+            self.L_reaction_time = None
+            self.R_reaction_time = None
+            time.sleep(3)
             for pin_name in ['Yellow1', 'Yellow2', 'Yellow3']:
                 GPIO.output(self.pin_config['ligth_pins'][pin_name], GPIO.HIGH)
                 time.sleep(0.5)  # Turn on for half a second
@@ -172,19 +177,19 @@ class GpioTkinterApp:
                 GPIO.output(self.pin_config['ligth_pins']['L_Green'], GPIO.HIGH)
             else:
                 print("L_Red sensor triggered during Yellow countdown. Skipping green LEDs.")
-                GPIO.output(self.pin_config['ligth_pins']['L_Red'], GPIO.HIGH)
+                GPIO.output(self.pin_config['ligth_pins']['L_Red'], GPIO.LOW)
                 
             if not R_red_sensor_triggered:
                 GPIO.output(self.pin_config['ligth_pins']['R_Green'], GPIO.HIGH)                
             else:
                 print("R_Red sensor triggered during Yellow countdown. Skipping green LEDs.")
-                GPIO.output(self.pin_config['ligth_pins']['R_Red'], GPIO.HIGH)
+                GPIO.output(self.pin_config['ligth_pins']['R_Red'], GPIO.LOW)
             self.start_time = time.time()
             # Calculate negative reaction times if there were false starts
             for button in ['L_Start', 'R_Start']:
                 press_time = self.button_press_times.get(button)
                 if press_time and press_time < self.start_time:
-                    reaction_time = -(self.start_time - press_time) * 1000
+                    reaction_time = -(self.start_time - press_time)
                     if button == 'L_Start':
                         self.L_reaction_time = reaction_time
                         self.L_reaction_recorded = True
